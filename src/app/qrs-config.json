@@ -1,4 +1,7 @@
 {
     "input_path": "public/index.html",
-    "output_path": "img.png"
+    "output_path": "qrcode/img.png",
+    "minify": {
+        "isMin": false
+    }
 }

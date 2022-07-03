@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as qrcode from 'qrcode';
 
 import { Command } from 'commander';
-import { promisify } from "util";
 import { readFile } from 'fs/promises';
 
 const lzw = require('lzw');
@@ -14,48 +13,68 @@ const command = new Command();
 command.version('1.0.0');
 const strConfig = `{
     "input_path": "",
-    "output_path": ""
+    "output_path": "",
+    "isMin": false
 }
 `;
-const htmlMin = (htmlFileStr: string) => {
-    let replacedCode = htmlFileStr;
-    replacedCode.replace('<script>', 'ºts');
-    replacedCode.replace('</script>', 'ºts/');
-    replacedCode.replace('<html>', 'ºth');
-    replacedCode.replace('</html>', 'ºth/');
-    replacedCode.replace('<body>', 'ºtb');
-    replacedCode.replace('</body>', 'ºtb/');
-    replacedCode.replace('<header>', 'ºthe');
-    replacedCode.replace('</header>', 'ºthe/');
-    replacedCode.replace('<style>', 'ºtst');
-    replacedCode.replace('</style>', 'ºtst/');
-    replacedCode.replace('<img', 'ºti');
-    replacedCode.replace('<footer', 'ºtf');
-    replacedCode.replace('<div', 'ºtd');
-    replacedCode.replace('</div>', 'ºtd/');
-    replacedCode.replace('<nav', 'ºtn')
-    //properties
-    replacedCode.replace('placeholder', 'ºpp');
-    replacedCode.replace(' style', 'ºps');
-    replacedCode.replace('hidden', 'ºph');
-    replacedCode.replace('type', 'ºpt');
-    //js
-    replacedCode.replace('alert(', 'ºja');
-    replacedCode.replace('function', 'ºjf');
-    replacedCode.replace('getElementById(', 'ºjg');
-    replacedCode.replace('toString()', 'ºjt');
-    return replacedCode;
-}
+
 //validator from error 
 const validator = {
-    'validExtension': (fileName: string, expected: string) => {
-        if (fileName.split('.')[1] === expected) {
+    validateFileExtension: (fileName: string, expected: string) => {
+        const extensionReceived = fileName.split('.')[1];
+        if (extensionReceived === expected) {
             return;
         } else {
-            throw `Error: expected an file type '${expected}'`;
+            const msg = `Invalid file type, expected: '${expected}'`;
+            throw new Error(msg);
         }
     }
 }
+
+const qrsService = {
+    codeMin: (htmlFileStr: string) => {
+        let replacedCode = htmlFileStr;
+        replacedCode.replace('¤', '¤¤');
+        replacedCode.replace('<script>', '¤ts');
+        replacedCode.replace('</script>', '¤ts/');
+        replacedCode.replace('<html>', '¤th');
+        replacedCode.replace('</html>', '¤th/');
+        replacedCode.replace('<body>', '¤tb');
+        replacedCode.replace('</body>', '¤tb/');
+        replacedCode.replace('<header>', '¤the');
+        replacedCode.replace('</header>', '¤the/');
+        replacedCode.replace('<style>', '¤tst');
+        replacedCode.replace('</style>', '¤tst/');
+        replacedCode.replace('<img', '¤ti');
+        replacedCode.replace('<footer', '¤tf');
+        replacedCode.replace('<div', '¤td');
+        replacedCode.replace('</div>', '¤td/');
+        replacedCode.replace('<nav', '¤tn');
+        replacedCode.replace('</nav>', '¤tn')
+        //properties
+        replacedCode.replace('placeholder', '¤pp');
+        replacedCode.replace(' style', '¤ps');
+        replacedCode.replace('hidden', '¤ph');
+        replacedCode.replace('type', '¤pt');
+        replacedCode.replace('class=', '¤pc');
+        //js
+        replacedCode.replace('alert(', '¤ja');
+        replacedCode.replace('function', '¤jf');
+        replacedCode.replace('getElementById(', '¤jg');
+        replacedCode.replace('toString()', '¤jt');
+        replacedCode.replace('¤¤', '¤');
+        return replacedCode;
+    },
+    addIndexToPath: (path: string, index: number) => {
+        const splitPath = path.split('.');
+        const finalPath = splitPath[0] + `_${index}.${splitPath[1]}`;
+        return finalPath;
+    },
+    minify: () => {
+        
+    }
+}
+
 //cli functions qrss
 const qrs = {
     //init configuration
@@ -74,14 +93,47 @@ const qrs = {
             output_path: string
         } = JSON.parse(qrsConfigFile.toString());
         const { input_path, output_path } = qrsConfig;
-        //return exception if invalid file type or nothing
-        validator.validExtension(input_path, 'html');
+        validator.validateFileExtension(input_path, 'html');
+
+
+
+
+
         const buffer = await readFile(input_path);
         const htmlFileStr = buffer.toString();
-        let compressed = lzw.compress(htmlMin(htmlFileStr));
-        await qrcode.toFile(output_path, JSON.stringify(compressed), {
-            type: 'png',
-        }).catch(error => console.log(error));
+        let compressed = lzw.compress(qrsService.codeMin(htmlFileStr));
+        const strCompressed: string = compressed.toString();
+        const iterations = strCompressed.length / 2364;
+        let strStart = 0;
+        let strFinal = 0;
+        const strSplitList = [];
+        for (let i = 0; i < iterations; i++) {
+            strFinal = strFinal + 2364;
+            const strSplit = strCompressed.substring(strStart, strFinal);
+            strSplitList.push(( i + 1) + '-' + strSplit);
+            strStart = strFinal;
+        }
+        if (strCompressed.length % iterations !== 0) {
+            const strSplit = strCompressed.substring(
+                strCompressed.length - strFinal,
+                strCompressed.length
+            );
+            strSplitList.push(strSplit);
+        }
+        strSplitList.forEach(async (strSplit, index) => {
+            const finalPath = qrsService.addIndexToPath(output_path, index);
+            await qrcode.toFile(
+                finalPath,
+                strSplit, 
+                {
+                    type: 'png',
+                    version: 40,
+                    scale: 2,
+                    width: 177,
+                    errorCorrectionLevel: 'L',
+                }
+            );
+        });
     },
     'reverse': () => {}
 }
