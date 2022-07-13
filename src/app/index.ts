@@ -55,7 +55,7 @@ const validator = {
     },
 
     errorFileExtension: (fileName: string, expected: string) => {
-        const extensionReceived = fileName.split('.')[1];
+        const extensionReceived = fileName.substring(fileName.length - expected.length, fileName.length);
         if (extensionReceived !== expected) {
             const msg = `Invalid file type, expected: '${expected}'!`;
             throw new Error(msg);
@@ -71,6 +71,16 @@ const validator = {
 }
 
 const qrsService = {
+    logSuccess(message: string) {
+        const blue = "\033[34m";
+        const reset = '\u001b[0m';
+        console.log(blue, message);
+        console.log(reset);
+    },
+
+    log(message: string) {
+        console.log('   -', `${message}`);
+    },
 
     getConfig() {
         const deafultPath = './qrs-config.json';
@@ -140,6 +150,7 @@ const qrsService = {
             htmlminifier_options
         } = qrs_config.minify_config.html;
         if (minify) {
+            qrsService.log("Minifying html . . .");
             htmlStr = htmlMinifier.minify(htmlStr, htmlminifier_options);
         }
         return htmlStr;
@@ -151,7 +162,8 @@ const qrsService = {
             uglifyjs_options
         } = qrs_config.minify_config.javascript;
         if (minify) {
-            const qtdScript = htmlStr.split('<script>').length;
+            qrsService.log("Minifying JS . . .");
+            const qtdScript = htmlStr.split('<script').length / 2;
             const indexListOpenScript = qrsService.getIndexListOf(
                 htmlStr,
                 '<script',
@@ -162,8 +174,8 @@ const qrsService = {
                 '</script>',
                 "initial"
             );
-            for (let i = qtdScript; i > 0; i--) {
-                let jsDirty = htmlStr.substring(
+            for (let i = 0; i < qtdScript; i++) {
+                const jsDirty = htmlStr.substring(
                     indexListOpenScript[i],
                     indexListCloseScript[i]
                 );
@@ -172,13 +184,13 @@ const qrsService = {
                     '>',
                     "final"
                 )[0];
-                const jsCodeClean = jsDirty.substring(
+                const onlyJS = jsDirty.substring(
                     indexFinalScriptTag,
                     indexListCloseScript[i]
                 );
-                const jsCodeMinResult = uglyfyJs.minify(jsCodeClean, uglifyjs_options);
+                const jsCodeMinResult = uglyfyJs.minify(onlyJS, uglifyjs_options);
                 validator.errorOnGetMinJs(jsCodeMinResult);
-                htmlStr = htmlStr.replace(jsCodeClean, jsCodeMinResult.code);
+                htmlStr = htmlStr.replace(onlyJS, jsCodeMinResult.code);
             }
         }
         return htmlStr;
@@ -190,7 +202,8 @@ const qrsService = {
             csso_options
         } = qrs_config.minify_config.css;
         if (minify) {
-            const qtdCss = htmlStr.split('<style>').length;
+            qrsService.log("Minifying CSS . . .");
+            const qtdCss = htmlStr.split('<style').length / 2;
             const indexListOpenStyle = qrsService.getIndexListOf(
                 htmlStr,
                 '<style',
@@ -201,7 +214,7 @@ const qrsService = {
                 '</style>',
                 "initial"
             );
-            for (let i = qtdCss; i > 0; i--) {
+            for (let i = 0 ; i < qtdCss; i++) {
                 let cssDirty = htmlStr.substring(
                     indexListOpenStyle[i],
                     indexListCloseStyle[i]
@@ -211,35 +224,37 @@ const qrsService = {
                     '>',
                     "final"
                 )[0];
-                const cssClean = cssDirty.substring(
+                const onlyCss = cssDirty.substring(
                     indexFinalStyleTag,
                     indexListCloseStyle[i]
                 );
-                const cssMinResult = csso.minify(cssClean, csso_options).css;
-                htmlStr = cssMinResult;
+                const cssMinResult = csso.minify(onlyCss, csso_options).css;
+                htmlStr = htmlStr.replace(onlyCss, cssMinResult);
             }
         }
         return htmlStr;
     },
 
-    minify: async (input_path: string, qrs_config: IMinifyConfig) => {
+    minify: async (qrs_min_config: IMinifyConfig) => {
         try {
             //get htmlstring
-            const buffer = await readFile(input_path);
+            const buffer = await readFile(qrs_min_config.input_path);
             const htmlStr = buffer.toString();
-            const htmlStrMin = qrsService.minifyCss(
-                qrsService.minifyJs(
-                    qrsService.minifyHtml(
-                        htmlStr,
-                        qrs_config
-                    ),
-                    qrs_config
-                ),
-                qrs_config
+            const onlyHtmlMin = qrsService.minifyHtml(
+                htmlStr,
+                qrs_min_config
             );
-            return htmlStrMin;
+            const onlyHtmlJsMin = qrsService.minifyJs(
+                onlyHtmlMin,
+                qrs_min_config
+            );
+            const fullMin = qrsService.minifyCss(
+                onlyHtmlJsMin,
+                qrs_min_config
+            );
+            return fullMin;
         } catch(error) {
-            console.log('error', error);
+            throw new Error(error);
         }
     },
 
@@ -291,21 +306,20 @@ const qrs = {
     'init': () => {
         validator.errorIfFileExists('./qrs-config.json');
         fs.writeFileSync('./qrs-config.json', qrs_config);
-        console.log("Started successfully!")
+        qrsService.logSuccess("Started successfully!");
     },
     'build': async () => {
-        console.log("Start build . . .");
+        qrsService.logSuccess("Start build . . .");
         //get default config
         const qrs_config: IMinifyConfig = qrsService.getConfig();
-        const { input_path, output_path } = qrs_config;
         //minify html, css, js
-        validator.errorFileExtension(input_path, 'html');
-        const htmlMinStr = await qrsService.minify(input_path, qrs_config);
+        validator.errorFileExtension(qrs_config.input_path, 'html');
+        const htmlMinStr = await qrsService.minify(qrs_config);
         const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr);
         const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
         const strSplitList = qrsService.splitCode(compactCodeHtml);
         qrsService.genQRCodeList(strSplitList, qrs_config);
-        console.log("Successfully built!");
+        qrsService.logSuccess("Successfully built!");
     }
 }
 //
