@@ -49,7 +49,7 @@ const validator = {
             const filePathSplit = filePath.split('/');
             const fileNameAndExtension = filePathSplit[filePathSplit.length - 1];
             const fileName = fileNameAndExtension.split('.')[0]
-            const msg = `The file '${fileName}' already exists!`;
+            const msg = `The file '${fileName}' not exists!`;
             throw new Error(msg);
         }
     },
@@ -71,16 +71,16 @@ const validator = {
 }
 
 const qrsService = {
-    logSuccess(message: string) {
-        const blue = "\033[34m";
-        const reset = '\u001b[0m';
-        console.log(blue, message);
-        console.log(reset);
-    },
+    // logSuccess(message: string) {
+    //     const blue = "\033[34m";
+    //     const reset = '\u001b[0m';
+    //     console.log(blue, message);
+    //     // console.log(reset);
+    // },
 
-    log(message: string) {
-        console.log('   -', `${message}`);
-    },
+    // log(message: string) {
+    //     console.log('   -', `${message}`);
+    // },
 
     getConfig() {
         const deafultPath = './qrs-config.json';
@@ -138,9 +138,8 @@ const qrsService = {
         return replacedCode;
     },
 
-    addIndexToPath: (path: string, index: number) => {
-        const splitPath = path.split('.');
-        const finalPath = splitPath[0] + `_${index}.${splitPath[1]}`;
+    addIndexToFileName: (path: string, index: number) => {
+        const finalPath = path + `/qrcode_${index}.png`;
         return finalPath;
     },
 
@@ -150,7 +149,7 @@ const qrsService = {
             htmlminifier_options
         } = qrs_config.minify_config.html;
         if (minify) {
-            qrsService.log("Minifying html . . .");
+            // qrsService.log("Minifying html . . .");
             htmlStr = htmlMinifier.minify(htmlStr, htmlminifier_options);
         }
         return htmlStr;
@@ -162,7 +161,7 @@ const qrsService = {
             uglifyjs_options
         } = qrs_config.minify_config.javascript;
         if (minify) {
-            qrsService.log("Minifying JS . . .");
+            // qrsService.log("Minifying JS . . .");
             const qtdScript = htmlStr.split('<script').length / 2;
             const indexListOpenScript = qrsService.getIndexListOf(
                 htmlStr,
@@ -202,7 +201,7 @@ const qrsService = {
             csso_options
         } = qrs_config.minify_config.css;
         if (minify) {
-            qrsService.log("Minifying CSS . . .");
+            // qrsService.log("Minifying CSS . . .");
             const qtdCss = htmlStr.split('<style').length / 2;
             const indexListOpenStyle = qrsService.getIndexListOf(
                 htmlStr,
@@ -259,15 +258,20 @@ const qrsService = {
     },
 
     compactStrFile(str: string) {
-        return lzw.compress(str).toString();
+        const compactStrFile = lzw.compress(str);
+        return compactStrFile.toString();
     },
 
     splitCode: (strCompressed: string) => {
-        const iterations = strCompressed.length / 2364;
+        //get qtd iterations,
+        const qtdSplit = strCompressed.length / 2364;
+         //if division result is integer return division result else remove decimals and add 1 iteration
+        const iterations = Number.isInteger(qtdSplit) ?
+        qtdSplit : (Number.parseInt(qtdSplit.toString()) + 1);
         const strSplitList = [];
         let strStart = 0;
         let strFinal = 0;
-        for (let i = 1; i < iterations; i++) {
+        for (let i = 0; i < iterations; i++) {
             strFinal = strFinal + 2364;
             const strSplit = strCompressed.substring(strStart, strFinal);
             strSplitList.push(strSplit);
@@ -284,7 +288,10 @@ const qrsService = {
     genQRCodeList: (strSplitList: Array<string>, qrs_config: IMinifyConfig) => {
         const { output_path } = qrs_config;
         strSplitList.forEach(async (strSplit, index) => {
-            const finalPath = qrsService.addIndexToPath(output_path, index);
+            if (!fs.existsSync(output_path)) {
+                fs.mkdirSync(output_path);
+            }
+            const finalPath = qrsService.addIndexToFileName(output_path, index + 1);
             await qrcode.toFile(
                 finalPath,
                 strSplit, 
@@ -295,7 +302,7 @@ const qrsService = {
                     width: 1980,
                     errorCorrectionLevel: 'L',
                 }
-            );
+            ).catch((error ) => console.log("error", error))
         });
     }
 }
@@ -306,10 +313,10 @@ const qrs = {
     'init': () => {
         validator.errorIfFileExists('./qrs-config.json');
         fs.writeFileSync('./qrs-config.json', qrs_config);
-        qrsService.logSuccess("Started successfully!");
+        // qrsService.logSuccess("Started successfully!");
     },
     'build': async () => {
-        qrsService.logSuccess("Start build . . .");
+        // qrsService.logSuccess("Start build . . .");
         //get default config
         const qrs_config: IMinifyConfig = qrsService.getConfig();
         //minify html, css, js
@@ -318,8 +325,9 @@ const qrs = {
         const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr);
         const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
         const strSplitList = qrsService.splitCode(compactCodeHtml);
+        console.log(strSplitList);
         qrsService.genQRCodeList(strSplitList, qrs_config);
-        qrsService.logSuccess("Successfully built!");
+        // qrsService.logSuccess("Successfully built!");
     }
 }
 //

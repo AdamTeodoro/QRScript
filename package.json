@@ -2,14 +2,16 @@
   "name": "qrscript",
   "version": "1.0.0",
   "description": "Transporte de script através de imagem",
-  "main": "index.js",
+  "main": "./src/app/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "nodemon ./src/app/index.ts qrs build"
   },
   "author": "Adam Teodoro",
   "license": "MIT",
   "keywords": [],
   "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
     "@types/csso": "^5.0.0",
     "@types/gulp": "^4.0.9",
     "@types/html-minifier": "^4.0.2",
@@ -30,5 +32,9 @@
     "qrcode": "^1.5.0",
     "shelljs": "^0.8.5",
     "uglify-js": "^3.16.1"
+  },
+  "bin": {
+    "qrs": "./dist/index.js",
+    "qrs build": ""
   }
 }
