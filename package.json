@@ -1,11 +1,13 @@
 {
-  "name": "qrscript",
+  "name": "qrs",
   "version": "1.0.0",
-  "description": "Transporte de script através de imagem",
-  "main": "./src/app/index.ts",
+  "description": "script transporter by qrcode, without internet",
+  "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "nodemon ./src/app/index.ts qrs build"
+    "qrs": "nodemon ./dist/index.js",
+    "init": "qrs init",
+    "build": "qrs build"
   },
   "author": "Adam Teodoro",
   "license": "MIT",
@@ -34,7 +36,6 @@
     "uglify-js": "^3.16.1"
   },
   "bin": {
-    "qrs": "./dist/index.js",
-    "qrs build": ""
+    "qrs": "node ./dist/index.js"
   }
 }
