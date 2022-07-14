@@ -54,7 +54,7 @@ const validator = {
         }
     },
 
-    errorFileExtension: (fileName: string, expected: string) => {
+    errorFileIfInvalidExtension: (fileName: string, expected: string) => {
         const extensionReceived = fileName.substring(fileName.length - expected.length, fileName.length);
         if (extensionReceived !== expected) {
             const msg = `Invalid file type, expected: '${expected}'!`;
@@ -285,7 +285,7 @@ const qrsService = {
         return strSplitList;
     },
 
-    genQRCodeList: (strSplitList: Array<string>, qrs_config: IMinifyConfig) => {
+    generateQRCodeList: (strSplitList: Array<string>, qrs_config: IMinifyConfig) => {
         const { output_path } = qrs_config;
         strSplitList.forEach(async (strSplit, index) => {
             if (!fs.existsSync(output_path)) {
@@ -320,15 +320,15 @@ const qrs = {
         //get default config
         const qrs_config: IMinifyConfig = qrsService.getConfig();
         //minify html, css, js
-        validator.errorFileExtension(qrs_config.input_path, 'html');
+        validator.errorFileIfInvalidExtension(qrs_config.input_path, 'html');
         const htmlMinStr = await qrsService.minify(qrs_config);
         const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr);
         const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
         const strSplitList = qrsService.splitCode(compactCodeHtml);
-        qrsService.genQRCodeList(strSplitList, qrs_config);
+        qrsService.generateQRCodeList(strSplitList, qrs_config);
     }
 }
-//
+
 command.command('qrs [option]')
 .description('create the config file of type json.')
 .action((option) => qrs[option]());
