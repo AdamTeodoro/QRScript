@@ -1,7 +1,7 @@
 
 # QRSCRIPT (Quick response script)
 
-This future library will be capaz de transform html, css and javascript in QRCODE, this QRCODE will be possible readed by app, and execute your web page without internet, in other words, download of app without internet, this apparently is not a very until, but look the use cases: 
+This future library will be able to transform html, css and javascript in QRCODE, this QRCODE will be possible readed by app, and execute your web page without internet, in other words, download of app without internet, this apparently is not a very until, but look the use cases: 
 
 Just point the camera and:
 1 - lightweight games can be read and played anywhere in the world.

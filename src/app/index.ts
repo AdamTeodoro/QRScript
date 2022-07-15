@@ -106,8 +106,9 @@ const qrsService = {
 
     reCodifyHtml: (htmlFileStr: string) => {
         let replacedCode = htmlFileStr;
+        //to save
         replacedCode.replace('¤', '¤¤');
-        replacedCode.replace('<script>', '¤ts');
+        replacedCode.replace('<script', '¤ts');
         replacedCode.replace('</script>', '¤ts/');
         replacedCode.replace('<html>', '¤th');
         replacedCode.replace('</html>', '¤th/');
@@ -122,18 +123,53 @@ const qrsService = {
         replacedCode.replace('<div', '¤td');
         replacedCode.replace('</div>', '¤td/');
         replacedCode.replace('<nav', '¤tn');
-        replacedCode.replace('</nav>', '¤tn')
+        replacedCode.replace('</nav>', '¤tn');
+        replacedCode.replace('<form', '¤tf');
+        replacedCode.replace('</form>', '¤tf/');
+        replacedCode.replace('<table>', '¤tt');
+        replacedCode.replace('</table>', '¤tt/');
+        replacedCode.replace('<button>', '¤tbu');
+        replacedCode.replace('</button>', '¤tbu/');
         //properties
         replacedCode.replace('placeholder', '¤pp');
         replacedCode.replace(' style', '¤ps');
         replacedCode.replace('hidden', '¤ph');
         replacedCode.replace('type', '¤pt');
         replacedCode.replace('class', '¤pc');
+        replacedCode.replace('width', '¤pw');
+        replacedCode.replace('height', '¤phe');
+        replacedCode.replace('padding', '¤ppa');
+        replacedCode.replace('margin', '¤pm');
+        replacedCode.replace('font-size', '¤pf');
+        replacedCode.replace('border', '¤pb');
+        replacedCode.replace('color', '¤pco');
+        replacedCode.replace('background', '¤pba');
+        replacedCode.replace('background-color', '¤pbac');
+        replacedCode.replace('background', '¤pba');
+        replacedCode.replace('onclick', '¤po');
         //js
         replacedCode.replace('alert(', '¤ja');
         replacedCode.replace('function', '¤jf');
         replacedCode.replace('getElementById(', '¤jg');
         replacedCode.replace('toString()', '¤jt');
+        replacedCode.replace('const', '¤jc');
+        replacedCode.replace('Number', '¤jn');
+        replacedCode.replace('JSON', '¤jj');
+        replacedCode.replace('contructor', '¤jco');
+        replacedCode.replace('while', '¤jw');
+        replacedCode.replace('return', '¤jr');
+        replacedCode.replace('stringify', '¤js');
+        replacedCode.replace('filter', '¤jfi');
+        replacedCode.replace('filter', '¤jfi');
+        replacedCode.replace('push', '¤jp');
+        replacedCode.replace('replace', '¤jre');
+        replacedCode.replace('indexOf', '¤ji');
+        replacedCode.replace('async', '¤jas');
+        replacedCode.replace('await', '¤jaw');
+        replacedCode.replace('length', '¤jl');
+        replacedCode.replace('parse', '¤jpu');
+        replacedCode.replace('forEach', '¤jfo');
+        //get save
         replacedCode.replace('¤¤', '¤');
         return replacedCode;
     },
