@@ -1,7 +1,7 @@
 
 export default `{
     "input_path": "public/index.html",
-    "output_path": "qrcode/img.png",
+    "output_path": "qrcode",
     "minify_config": {
         "html": {
             "minify": true,

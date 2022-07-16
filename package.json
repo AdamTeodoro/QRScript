@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "qrs": "nodemon ./dist/index.js",
+    "qrs": "node ./dist/index.js qrs",
     "init": "qrs init",
     "build": "qrs build"
   },
@@ -17,8 +17,9 @@
     "@types/csso": "^5.0.0",
     "@types/gulp": "^4.0.9",
     "@types/html-minifier": "^4.0.2",
-    "@types/node": "^18.0.0",
+    "@types/node": "^18.0.4",
     "@types/qrcode": "^1.4.2",
+    "@types/shelljs": "^0.8.11",
     "@types/uglify-js": "^3.16.0"
   },
   "dependencies": {
@@ -30,12 +31,14 @@
     "html-minifier": "^4.0.0",
     "inquirer": "^6.2.2",
     "lzw": "^0.0.3",
+    "nodemon": "^2.0.19",
     "plumber": "^0.4.8",
     "qrcode": "^1.5.0",
     "shelljs": "^0.8.5",
     "uglify-js": "^3.16.1"
   },
+  "preferGlobal": true,
   "bin": {
-    "qrs": "node ./src/app/index.ts"
+    "qrs": "node ./dist/index.js"
   }
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as qrcode from 'qrcode';
-import * as htmlMinifier from 'html-minifier';
-import * as uglyfyJs from 'uglify-js';
-import * as csso from 'csso';
+import fs from 'fs';
+import qrcode from 'qrcode';
+import htmlMinifier from 'html-minifier';
+import uglyfyJs from 'uglify-js';
+import csso from 'csso';
 
 import { readFile } from 'fs/promises';
 import { Command } from 'commander';
@@ -19,6 +19,44 @@ const lzw = require('lzw');
 const command = new Command();
 command.version('1.0.0');
 
+const showMsg = {
+    getRed: (msg: string) => {
+        const red = "\033[31m";
+        const removeColor = '\u001b[0m';
+        return red + msg + removeColor;
+    },
+    getGreen: (msg: string) => {
+        const green = "\033[32m";
+        const removeColor = '\u001b[0m';
+        return green + msg + removeColor;
+    },
+    getYellow: (msg: string) => {
+        const yellow = "\033[33m";
+        const removeColor = '\u001b[0m';
+        return yellow + msg + removeColor;
+    },
+    getBlue: (msg: string) => {
+        const blue = "\033[34m";
+        const removeColor = '\u001b[0m';
+        return blue + msg + removeColor;
+    },
+    green: (msg: string) => {
+        console.log(showMsg.getGreen(msg));
+    },
+    red: (msg: string) => {
+        console.log(showMsg.getRed(msg));
+    },
+    yellow: (msg: string) => {
+        console.log(showMsg.getYellow(msg))
+    },
+    blue: (msg: string) => {
+        console.log(showMsg.getBlue(msg));
+    },
+    white(msg: string) {
+        console.log(msg);
+    }
+}
+
 //validator from error 
 const validator = {
 
@@ -31,26 +69,26 @@ const validator = {
     },
 
     fileNotExists: (filePath: string) => {
-        return !validator.fileExists(filePath);
+        return !fs.existsSync(filePath);
     },
 
     errorIfFileExists: (filePath: string) => {
         if (validator.fileExists(filePath)) {
-            const filePathSplit = filePath.split('/');
-            const fileNameAndExtension = filePathSplit[filePathSplit.length - 1];
-            const fileName = fileNameAndExtension.split('.')[0]
+            const pathSplited = filePath.split('/');
+            const lastIndex = pathSplited.length - 1;
+            const fileName = pathSplited[lastIndex];
             const msg = `The file '${fileName}' already exists!`;
-            throw new Error(msg);
+            throw new Error(showMsg.getRed(msg));
         }
     },
 
     errorIfFileNotExists: (filePath: string) => {
         if (validator.fileNotExists(filePath)) {
-            const filePathSplit = filePath.split('/');
-            const fileNameAndExtension = filePathSplit[filePathSplit.length - 1];
-            const fileName = fileNameAndExtension.split('.')[0]
+            const pathSplited = filePath.split('/');
+            const lastIndex = pathSplited.length - 1;
+            const fileName = pathSplited[lastIndex];
             const msg = `The file '${fileName}' not exists!`;
-            throw new Error(msg);
+            throw new Error(showMsg.getRed(msg));
         }
     },
 
@@ -58,7 +96,7 @@ const validator = {
         const extensionReceived = fileName.substring(fileName.length - expected.length, fileName.length);
         if (extensionReceived !== expected) {
             const msg = `Invalid file type, expected: '${expected}'!`;
-            throw new Error(msg);
+            throw new Error(showMsg.getRed(msg));
         }
         return;
     },
@@ -71,26 +109,24 @@ const validator = {
 }
 
 const qrsService = {
-    logSuccess(message: string) {
-        const blue = "\033[34m";
-        const reset = '\u001b[0m';
-        console.log(blue, message);
-        console.log(reset);
-    },
-
-    log(message: string) {
-        console.log('   -', `${message}`);
+    genFolder(path: string) {
+        if (!fs.existsSync(path)) {
+            fs.mkdirSync(path);
+        }
     },
 
     getConfig() {
         const deafultPath = './qrs-config.json';
-        validator.errorIfFileNotExists(deafultPath);
         const qrsConfigFile = fs.readFileSync(deafultPath);
         const qrsConfig: IMinifyConfig = JSON.parse(qrsConfigFile.toString());
         return qrsConfig;
     },
 
-    getIndexListOf(str: string, match: string, typeIndex = "initial" || "final"): Array<number> {
+    getIndexListOf(
+        str: string,
+        match: string,
+        typeIndex = "initial" || "final"
+    ): Array<number> {
         const indexList: Array<number> = [];
         for (let i = 0; i < str.length; i++) {
             if (str.substring(i, i + match.length) == match) {
@@ -185,7 +221,7 @@ const qrsService = {
             htmlminifier_options
         } = qrs_config.minify_config.html;
         if (minify) {
-            qrsService.log("Minifying html . . .");
+            showMsg.blue("Minifying html . . .");
             htmlStr = htmlMinifier.minify(htmlStr, htmlminifier_options);
         }
         return htmlStr;
@@ -197,7 +233,7 @@ const qrsService = {
             uglifyjs_options
         } = qrs_config.minify_config.javascript;
         if (minify) {
-            qrsService.log("Minifying JS . . .");
+            showMsg.blue("Minifying JS . . .");
             const qtdScript = htmlStr.split('<script').length / 2;
             const indexListOpenScript = qrsService.getIndexListOf(
                 htmlStr,
@@ -237,7 +273,7 @@ const qrsService = {
             csso_options
         } = qrs_config.minify_config.css;
         if (minify) {
-            qrsService.log("Minifying CSS . . .");
+            showMsg.blue("Minifying CSS . . .");
             const qtdCss = htmlStr.split('<style').length / 2;
             const indexListOpenStyle = qrsService.getIndexListOf(
                 htmlStr,
@@ -272,8 +308,13 @@ const qrsService = {
 
     minify: async (qrs_min_config: IMinifyConfig) => {
         try {
+            const {
+                input_path,
+                output_path,
+            } = qrs_min_config;
+            qrsService.genFolder(output_path)
             //get htmlstring
-            const buffer = await readFile(qrs_min_config.input_path);
+            const buffer = await readFile(input_path);
             const htmlStr = buffer.toString();
             const onlyHtmlMin = qrsService.minifyHtml(
                 htmlStr,
@@ -321,13 +362,17 @@ const qrsService = {
         return strSplitList;
     },
 
-    generateQRCodeList: (strSplitList: Array<string>, qrs_config: IMinifyConfig) => {
+    generateQRCodeList: (
+        strSplitList: Array<string>,
+        qrs_config: IMinifyConfig
+    ) => {
         const { output_path } = qrs_config;
         strSplitList.forEach(async (strSplit, index) => {
-            if (!fs.existsSync(output_path)) {
-                fs.mkdirSync(output_path);
-            }
-            const finalPath = qrsService.addIndexToFileName(output_path, index + 1);
+            qrsService.genFolder(output_path);
+            const finalPath = qrsService.addIndexToFileName(
+                output_path,
+                index++
+            );
             await qrcode.toFile(
                 finalPath,
                 strSplit, 
@@ -345,14 +390,14 @@ const qrsService = {
 
 //cli functions qrs
 const qrs = {
-    //init configuration
     'init': () => {
         validator.errorIfFileExists('./qrs-config.json');
         fs.writeFileSync('./qrs-config.json', qrs_config);
-        qrsService.logSuccess("Started successfully!");
+        fs.writeFileSync('/public', qrs_config);
+        showMsg.green("Started successfully!");
     },
     'build': async () => {
-        qrsService.logSuccess("Start build . . .");
+        showMsg.green("Start build . . .");
         //get default config
         const qrs_config: IMinifyConfig = qrsService.getConfig();
         //minify html, css, js
@@ -362,6 +407,7 @@ const qrs = {
         const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
         const strSplitList = qrsService.splitCode(compactCodeHtml);
         qrsService.generateQRCodeList(strSplitList, qrs_config);
+        showMsg.green("Build success . . .");
     }
 }
 

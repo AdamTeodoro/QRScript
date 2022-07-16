@@ -1,6 +1,6 @@
 {
     "input_path": "public/index.html",
-    "output_path": "qrcode/",
+    "output_path": "qrcode",
     "minify_config": {
         "html": {
             "minify": true,
