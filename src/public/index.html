@@ -1,0 +1,125 @@
+<style>
+    button {
+        font-size: 16pt;
+
+        color: #333;
+        
+        border: 1px #333 solid;
+
+        width: 30% !important;
+        height: 30% !important;
+
+        padding: auto !important;
+    }
+</style>
+<div id="board">
+    <button id="square-00" onclick="selectSquare(0, 0)"></button>
+    <button id="square-01" onclick="selectSquare(0, 1)"></button>
+    <button id="square-02" onclick="selectSquare(0, 2)"></button>
+    <button id="square-10" onclick="selectSquare(1, 0)"></button>
+    <button id="square-11" onclick="selectSquare(1, 1)"></button>
+    <button id="square-12" onclick="selectSquare(1, 2)"></button>
+    <button id="square-20" onclick="selectSquare(2, 0)"></button>
+    <button id="square-21" onclick="selectSquare(2, 1)"></button>
+    <button id="square-22" onclick="selectSquare(2, 2)"></button>
+</div>
+<script async>
+    const squares = [
+        [null, null, null],
+        [null, null, null],
+        [null, null, null]
+    ];
+
+    let player = "x";
+
+    function validateWinner() {
+        let auxX = [];
+        let auxO = [null, null, null];
+        let xColumn = 0;
+        let k = 0;
+        let i = 0;
+
+        if (
+            squares[0][0] === squares[1][0] &&
+            squares[0][0] === squares[2][0] &&
+            squares[0][0] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[0][1] === squares[1][1] &&
+            squares[0][1] === squares[2][1] &&
+            squares[0][1] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[0][2] === squares[1][2] &&
+            squares[0][2] === squares[2][2] &&
+            squares[0][2] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[0][0] === squares[0][1] &&
+            squares[0][0] === squares[0][2] &&
+            squares[0][0] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[1][0] === squares[1][1] &&
+            squares[1][0] === squares[1][2] &&
+            squares[1][0] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[2][0] === squares[2][1] &&
+            squares[2][0] === squares[2][2] &&
+            squares[2][0] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[0][2] === squares[1][1] &&
+            squares[0][2] === squares[2][0] &&
+            squares[0][2] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+        if (
+            squares[0][0] === squares[1][1] &&
+            squares[0][0] === squares[2][2] &&
+            squares[0][0] !== null
+        ) {
+            alert('Winner: ' + player);
+            window.location.reload();            
+        }
+
+    }
+
+    function selectSquare(posK, posI) {
+        if (squares[posK][posI] === null) {
+            squares[posK][posI] = player;
+            const square = document.getElementById(`square-${posK}${posI}`);
+            square.textContent = player;
+            validateWinner();
+            player = player === "x" ? "o": "x";
+        }
+    }
+</script>

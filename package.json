@@ -2,12 +2,9 @@
   "name": "qrs",
   "version": "1.0.0",
   "description": "script transporter by qrcode, without internet",
-  "main": "./dist/index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "qrs": "node ./dist/index.js qrs",
-    "init": "qrs init",
-    "build": "qrs build"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Adam Teodoro",
   "license": "MIT",
@@ -37,8 +34,5 @@
     "shelljs": "^0.8.5",
     "uglify-js": "^3.16.1"
   },
-  "preferGlobal": true,
-  "bin": {
-    "qrs": "node ./dist/index.js"
-  }
+  "preferGlobal": true
 }

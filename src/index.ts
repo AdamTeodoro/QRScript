@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-
-import fs from 'fs';
-import qrcode from 'qrcode';
-import htmlMinifier from 'html-minifier';
-import uglyfyJs from 'uglify-js';
-import csso from 'csso';
+import * as fs from 'fs';
+import * as qrcode from 'qrcode';
+import * as htmlMinifier from 'html-minifier';
+import * as uglyfyJs from 'uglify-js';
+import * as csso from 'csso';
+import * as chalk from 'chalk';
 
 import { readFile } from 'fs/promises';
 import { Command } from 'commander';
@@ -21,36 +21,19 @@ command.version('1.0.0');
 
 const showMsg = {
     getRed: (msg: string) => {
-        const red = "\033[31m";
-        const removeColor = '\u001b[0m';
-        return red + msg + removeColor;
-    },
-    getGreen: (msg: string) => {
-        const green = "\033[32m";
-        const removeColor = '\u001b[0m';
-        return green + msg + removeColor;
-    },
-    getYellow: (msg: string) => {
-        const yellow = "\033[33m";
-        const removeColor = '\u001b[0m';
-        return yellow + msg + removeColor;
-    },
-    getBlue: (msg: string) => {
-        const blue = "\033[34m";
-        const removeColor = '\u001b[0m';
-        return blue + msg + removeColor;
+        return chalk.default.red(msg);
     },
     green: (msg: string) => {
-        console.log(showMsg.getGreen(msg));
+        console.log(chalk.default.green(msg));
     },
     red: (msg: string) => {
-        console.log(showMsg.getRed(msg));
+        console.log(chalk.default.red(msg));
     },
     yellow: (msg: string) => {
-        console.log(showMsg.getYellow(msg))
+        console.log(chalk.default.yellow(msg))
     },
     blue: (msg: string) => {
-        console.log(showMsg.getBlue(msg));
+        console.log(chalk.default.yellow(msg))
     },
     white(msg: string) {
         console.log(msg);
@@ -117,11 +100,12 @@ const qrsService = {
 
     getConfig() {
         const deafultPath = './qrs-config.json';
+        validator.errorIfFileNotExists(deafultPath);
         const qrsConfigFile = fs.readFileSync(deafultPath);
         const qrsConfig: IMinifyConfig = JSON.parse(qrsConfigFile.toString());
         return qrsConfig;
     },
-
+    
     getIndexListOf(
         str: string,
         match: string,
@@ -141,72 +125,71 @@ const qrsService = {
     },
 
     reCodifyHtml: (htmlFileStr: string) => {
-        let replacedCode = htmlFileStr;
         //to save
-        replacedCode.replace('¤', '¤¤');
-        replacedCode.replace('<script', '¤ts');
-        replacedCode.replace('</script>', '¤ts/');
-        replacedCode.replace('<html>', '¤th');
-        replacedCode.replace('</html>', '¤th/');
-        replacedCode.replace('<body>', '¤tb');
-        replacedCode.replace('</body>', '¤tb/');
-        replacedCode.replace('<header>', '¤the');
-        replacedCode.replace('</header>', '¤the/');
-        replacedCode.replace('<style>', '¤tst');
-        replacedCode.replace('</style>', '¤tst/');
-        replacedCode.replace('<img', '¤ti');
-        replacedCode.replace('<footer', '¤tf');
-        replacedCode.replace('<div', '¤td');
-        replacedCode.replace('</div>', '¤td/');
-        replacedCode.replace('<nav', '¤tn');
-        replacedCode.replace('</nav>', '¤tn');
-        replacedCode.replace('<form', '¤tf');
-        replacedCode.replace('</form>', '¤tf/');
-        replacedCode.replace('<table>', '¤tt');
-        replacedCode.replace('</table>', '¤tt/');
-        replacedCode.replace('<button>', '¤tbu');
-        replacedCode.replace('</button>', '¤tbu/');
-        //properties
-        replacedCode.replace('placeholder', '¤pp');
-        replacedCode.replace(' style', '¤ps');
-        replacedCode.replace('hidden', '¤ph');
-        replacedCode.replace('type', '¤pt');
-        replacedCode.replace('class', '¤pc');
-        replacedCode.replace('width', '¤pw');
-        replacedCode.replace('height', '¤phe');
-        replacedCode.replace('padding', '¤ppa');
-        replacedCode.replace('margin', '¤pm');
-        replacedCode.replace('font-size', '¤pf');
-        replacedCode.replace('border', '¤pb');
-        replacedCode.replace('color', '¤pco');
-        replacedCode.replace('background', '¤pba');
-        replacedCode.replace('background-color', '¤pbac');
-        replacedCode.replace('background', '¤pba');
-        replacedCode.replace('onclick', '¤po');
-        //js
-        replacedCode.replace('alert(', '¤ja');
-        replacedCode.replace('function', '¤jf');
-        replacedCode.replace('getElementById(', '¤jg');
-        replacedCode.replace('toString()', '¤jt');
-        replacedCode.replace('const', '¤jc');
-        replacedCode.replace('Number', '¤jn');
-        replacedCode.replace('JSON', '¤jj');
-        replacedCode.replace('contructor', '¤jco');
-        replacedCode.replace('while', '¤jw');
-        replacedCode.replace('return', '¤jr');
-        replacedCode.replace('stringify', '¤js');
-        replacedCode.replace('filter', '¤jfi');
-        replacedCode.replace('filter', '¤jfi');
-        replacedCode.replace('push', '¤jp');
-        replacedCode.replace('replace', '¤jre');
-        replacedCode.replace('indexOf', '¤ji');
-        replacedCode.replace('async', '¤jas');
-        replacedCode.replace('await', '¤jaw');
-        replacedCode.replace('length', '¤jl');
-        replacedCode.replace('parse', '¤jpu');
-        replacedCode.replace('forEach', '¤jfo');
-        //get save
-        replacedCode.replace('¤¤', '¤');
+        let replacedCode = htmlFileStr.replace('¤', '¤¤')
+        .replace('<script', '¤ts')
+        .replace('</script>', '¤ts/')
+        .replace('<html', '¤th')
+        .replace('</html>', '¤th/')
+        .replace('<body', '¤tb')
+        .replace('</body>', '¤tb/')
+        .replace('<header', '¤the')
+        .replace('</header>', '¤the/')
+        .replace('<style', '¤tst')
+        .replace('</style>', '¤tst/')
+        .replace('<img', '¤ti')
+        .replace('<footer', '¤tf')
+        .replace('<div', '¤td')
+        .replace('</div>', '¤td/')
+        .replace('<nav', '¤tn')
+        .replace('</nav>', '¤tn')
+        .replace('<form', '¤tf')
+        .replace('</form>', '¤tf/')
+        .replace('<table', '¤tt')
+        .replace('</table>', '¤tt/')
+        .replace('<button', '¤tbu')
+        .replace('</button>', '¤tbu/')
+        // -----------------------------property
+        .replace('placeholder', '¤pp')
+        .replace(' style', '¤ps')
+        .replace('hidden', '¤ph')
+        .replace('type', '¤pt')
+        .replace('class', '¤pc')
+        .replace('width', '¤pw')
+        .replace('height', '¤phe')
+        .replace('padding', '¤ppa')
+        .replace('margin', '¤pm')
+        .replace('font-size', '¤pf')
+        .replace('border', '¤pb')
+        .replace('color', '¤pco')
+        .replace('background', '¤pba')
+        .replace('background-color', '¤pbac')
+        .replace('background', '¤pba')
+        .replace('onclick', '¤po')
+        // --------------------------- javascript
+        .replace('alert(', '¤ja')
+        .replace('function', '¤jf')
+        .replace('getElementById(', '¤jg')
+        .replace('toString()', '¤jt')
+        .replace('const', '¤jc')
+        .replace('Number', '¤jn')
+        .replace('JSON', '¤jj')
+        .replace('contructor', '¤jco')
+        .replace('while', '¤jw')
+        .replace('return', '¤jr')
+        .replace('stringify', '¤js')
+        .replace('filter', '¤jfi')
+        .replace('filter', '¤jfi')
+        .replace('push', '¤jp')
+        .replace('replace', '¤jre')
+        .replace('indexOf', '¤ji')
+        .replace('async', '¤jas')
+        .replace('await', '¤jaw')
+        .replace('length', '¤jl')
+        .replace('parse', '¤jpu')
+        .replace('forEach', '¤jfo')
+        // ------------------------- codefyed string data
+        .replace('¤¤', '¤');
         return replacedCode;
     },
 
@@ -307,31 +290,27 @@ const qrsService = {
     },
 
     minify: async (qrs_min_config: IMinifyConfig) => {
-        try {
-            const {
-                input_path,
-                output_path,
-            } = qrs_min_config;
-            qrsService.genFolder(output_path)
-            //get htmlstring
-            const buffer = await readFile(input_path);
-            const htmlStr = buffer.toString();
-            const onlyHtmlMin = qrsService.minifyHtml(
-                htmlStr,
-                qrs_min_config
-            );
-            const onlyHtmlJsMin = qrsService.minifyJs(
-                onlyHtmlMin,
-                qrs_min_config
-            );
-            const fullMin = qrsService.minifyCss(
-                onlyHtmlJsMin,
-                qrs_min_config
-            );
-            return fullMin;
-        } catch(error) {
-            throw new Error(error);
-        }
+        const {
+            input_path,
+            output_path,
+        } = qrs_min_config;
+        qrsService.genFolder(output_path)
+        //get htmlstring
+        const buffer = await readFile(input_path);
+        const htmlStr = buffer.toString();
+        const onlyHtmlMin = qrsService.minifyHtml(
+            htmlStr,
+            qrs_min_config
+        );
+        const onlyHtmlJsMin = qrsService.minifyJs(
+            onlyHtmlMin,
+            qrs_min_config
+        );
+        const fullMin = qrsService.minifyCss(
+            onlyHtmlJsMin,
+            qrs_min_config
+        );
+        return fullMin;
     },
 
     compactStrFile(str: string) {
@@ -341,11 +320,16 @@ const qrsService = {
 
     splitCode: (strCompressed: string) => {
         //get qtd iterations,
-        const qtdSplit = strCompressed.length / 2364;
+        const qtdCodeSplited = strCompressed.length / 2364;
          //if division result is integer return division result else remove decimals and add 1 iteration
-        const iterations = Number.isInteger(qtdSplit) ?
-        qtdSplit : (Number.parseInt(qtdSplit.toString()) + 1);
-        const strSplitList = [];
+        let iterations = 0;
+        if (Number.isInteger(qtdCodeSplited)) {
+            iterations = qtdCodeSplited;
+        } else {
+            const exactSplitQtd = Number.parseInt(qtdCodeSplited.toString());
+            iterations = (exactSplitQtd + 1);
+        }
+        const strSplitList: Array<string> = [];
         let strStart = 0;
         let strFinal = 0;
         for (let i = 0; i < iterations; i++) {
@@ -357,7 +341,9 @@ const qrsService = {
         strSplitList.forEach((strSplit, index) => {
             const strDroped = strSplitList.splice(index);
             //add 'index of qrcode/number of qrcode-' in init of str 
-            strSplitList.push(`${index}/${strSplit.length}-` + strDroped);
+            strSplitList.push(`${index}/${iterations}-` + strDroped);
+            console.log("index: ", index);
+            console.log("interations: ", iterations);
         });
         return strSplitList;
     },
@@ -393,7 +379,7 @@ const qrs = {
     'init': () => {
         validator.errorIfFileExists('./qrs-config.json');
         fs.writeFileSync('./qrs-config.json', qrs_config);
-        fs.writeFileSync('/public', qrs_config);
+        qrsService.genFolder('/public');
         showMsg.green("Started successfully!");
     },
     'build': async () => {
@@ -404,15 +390,15 @@ const qrs = {
         validator.errorFileIfInvalidExtension(qrs_config.input_path, 'html');
         const htmlMinStr = await qrsService.minify(qrs_config);
         const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr);
-        const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
-        const strSplitList = qrsService.splitCode(compactCodeHtml);
+        // const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
+        const strSplitList = qrsService.splitCode(recodifiedHtml);
         qrsService.generateQRCodeList(strSplitList, qrs_config);
         showMsg.green("Build success . . .");
     }
 }
 
 command.command('qrs [option]')
-.description('create the config file of type json.')
-.action((option) => qrs[option]());
+.description('execute function with the option name.')
+.action((option: "build" | "init") => qrs[option]());
 
 command.parse(process.argv);
