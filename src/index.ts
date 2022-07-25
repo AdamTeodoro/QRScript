@@ -298,6 +298,7 @@ const qrsService = {
         //get htmlstring
         const buffer = await readFile(input_path);
         const htmlStr = buffer.toString();
+        console.log("", buffer.toString().length);
         const onlyHtmlMin = qrsService.minifyHtml(
             htmlStr,
             qrs_min_config
@@ -313,7 +314,7 @@ const qrsService = {
         return fullMin;
     },
 
-    compactStrFile(str: string) {
+    compactStrFile(str: string): string {
         const compactStrFile = lzw.compress(str);
         return compactStrFile.toString();
     },
@@ -327,13 +328,15 @@ const qrsService = {
             author,
             license
         } = qrsConfig;
-        splitedCode[0] = `${app_name}/${author}/${license}` + splitedCode[0];
+        splitedCode[0] = `${app_name}/${author}/${license}/` + splitedCode[0];
         return splitedCode;
     },
 
     splitCode: (strCompressed: string, qrsConfig: IQRSConfig) => {
-        //get qtd iterations,
-        const qtdCodeSplited = strCompressed.length / 2364;
+        const strSize = 2364;
+        console.log("strSize: ", strCompressed.length);
+        console.log("iterations: ", strCompressed.length / strSize);
+        const qtdCodeSplited = strCompressed.length / strSize;
          //if division result is integer return division result else remove decimals and add 1 iteration
         let iterations = 0;
         if (Number.isInteger(qtdCodeSplited)) {
@@ -346,7 +349,7 @@ const qrsService = {
         let strStart = 0;
         let strFinal = 0;
         for (let i = 0; i < iterations; i++) {
-            strFinal = strFinal + 2364;
+            strFinal = strFinal + strSize;
             const strSplit = strCompressed.substring(strStart, strFinal);
             strSplitList.push(strSplit);
             strStart = strFinal;
@@ -405,7 +408,8 @@ const qrs = {
         //minify html, css, js
         validator.errorFileIfInvalidExtension(qrs_config.input_path, 'html');
         const htmlMinStr = await qrsService.minify(qrs_config);
-        const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr);
+        console.log("recodifiedHtml: ", htmlMinStr.length);
+        const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr); 
         // const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
         const strSplitList = qrsService.splitCode(recodifiedHtml, qrs_config);
         qrsService.generateQRCodeList(strSplitList, qrs_config);
