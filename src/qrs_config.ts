@@ -1,5 +1,8 @@
 
 export default `{
+    "app_name": "your_app_name",
+    "author": "owner",
+    "license": "MIT",
     "input_path": "public/index.html",
     "output_path": "qrcode",
     "minify_config": {

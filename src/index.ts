@@ -9,7 +9,7 @@ import * as chalk from 'chalk';
 import { readFile } from 'fs/promises';
 import { Command } from 'commander';
 
-import { IMinifyConfig } from './interfaces/IMinConfig';
+import { IQRSConfig } from './interfaces/IQRSConfig';
 
 import qrs_config from './qrs_config';
 
@@ -102,7 +102,7 @@ const qrsService = {
         const deafultPath = './qrs-config.json';
         validator.errorIfFileNotExists(deafultPath);
         const qrsConfigFile = fs.readFileSync(deafultPath);
-        const qrsConfig: IMinifyConfig = JSON.parse(qrsConfigFile.toString());
+        const qrsConfig: IQRSConfig = JSON.parse(qrsConfigFile.toString());
         return qrsConfig;
     },
     
@@ -198,7 +198,7 @@ const qrsService = {
         return finalPath;
     },
 
-    minifyHtml: (htmlStr: string, qrs_config: IMinifyConfig) => {
+    minifyHtml: (htmlStr: string, qrs_config: IQRSConfig) => {
         const {
             minify,
             htmlminifier_options
@@ -210,7 +210,7 @@ const qrsService = {
         return htmlStr;
     },
 
-    minifyJs: (htmlStr: string, qrs_config: IMinifyConfig) => {
+    minifyJs: (htmlStr: string, qrs_config: IQRSConfig) => {
         const {
             minify,
             uglifyjs_options
@@ -250,7 +250,7 @@ const qrsService = {
         return htmlStr;
     },
 
-    minifyCss: (htmlStr: string, qrs_config: IMinifyConfig) => {
+    minifyCss: (htmlStr: string, qrs_config: IQRSConfig) => {
         const {
             minify,
             csso_options
@@ -289,7 +289,7 @@ const qrsService = {
         return htmlStr;
     },
 
-    minify: async (qrs_min_config: IMinifyConfig) => {
+    minify: async (qrs_min_config: IQRSConfig) => {
         const {
             input_path,
             output_path,
@@ -318,7 +318,20 @@ const qrsService = {
         return compactStrFile.toString();
     },
 
-    splitCode: (strCompressed: string) => {
+    addProjectDetails: (
+        splitedCode: Array<string>,
+        qrsConfig: IQRSConfig
+    ) => {
+        const  {
+            app_name,
+            author,
+            license
+        } = qrsConfig;
+        splitedCode[0] = `${app_name}/${author}/${license}` + splitedCode[0];
+        return splitedCode;
+    },
+
+    splitCode: (strCompressed: string, qrsConfig: IQRSConfig) => {
         //get qtd iterations,
         const qtdCodeSplited = strCompressed.length / 2364;
          //if division result is integer return division result else remove decimals and add 1 iteration
@@ -339,18 +352,21 @@ const qrsService = {
             strStart = strFinal;
         }
         strSplitList.forEach((strSplit, index) => {
-            const strDroped = strSplitList.splice(index);
+            const strDroped = strSplitList.splice(index, 1);
             //add 'index of qrcode/number of qrcode-' in init of str 
             strSplitList.push(`${index}/${iterations}-` + strDroped);
             console.log("index: ", index);
             console.log("interations: ", iterations);
         });
-        return strSplitList;
+        return qrsService.addProjectDetails(
+            strSplitList,
+            qrsConfig
+        );
     },
 
     generateQRCodeList: (
         strSplitList: Array<string>,
-        qrs_config: IMinifyConfig
+        qrs_config: IQRSConfig
     ) => {
         const { output_path } = qrs_config;
         strSplitList.forEach(async (strSplit, index) => {
@@ -385,15 +401,15 @@ const qrs = {
     'build': async () => {
         showMsg.green("Start build . . .");
         //get default config
-        const qrs_config: IMinifyConfig = qrsService.getConfig();
+        const qrs_config: IQRSConfig = qrsService.getConfig();
         //minify html, css, js
         validator.errorFileIfInvalidExtension(qrs_config.input_path, 'html');
         const htmlMinStr = await qrsService.minify(qrs_config);
         const recodifiedHtml = qrsService.reCodifyHtml(htmlMinStr);
         // const compactCodeHtml = qrsService.compactStrFile(recodifiedHtml);
-        const strSplitList = qrsService.splitCode(recodifiedHtml);
+        const strSplitList = qrsService.splitCode(recodifiedHtml, qrs_config);
         qrsService.generateQRCodeList(strSplitList, qrs_config);
-        showMsg.green("Build success . . .");
+        showMsg.green("Successfully built!");
     }
 }
 

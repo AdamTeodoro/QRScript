@@ -2,7 +2,10 @@ import  * as htmlminifier from 'html-minifier';
 import * as uglyfyJs  from 'uglify-js';
 import * as csso from 'csso';
 
-export interface IMinifyConfig {
+export interface IQRSConfig {
+    app_name: string,
+    author: string,
+    license: string,
     input_path: string;
     output_path: string;
     minify_config: {
